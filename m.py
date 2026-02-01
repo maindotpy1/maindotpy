@@ -17,10 +17,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-BOT_TOKEN = ""
+BOT_TOKEN = "8270090341:AAG2O6fLk4PFWaf9mLP_leiGkCEUobLaDIo"
 YML_FILE_PATH = ".github/workflows/main.yml"
 BINARY_FILE_NAME = "soul"
-ADMIN_IDS = [521756472, 7733336238] 
+ADMIN_IDS = [937173294, 937173294] 
 
 WAITING_FOR_BINARY = 1
 WAITING_FOR_BROADCAST = 2
