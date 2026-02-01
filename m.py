@@ -1,5 +1,6 @@
 import os
 import json
+import asyncio
 import logging
 import threading
 import time
@@ -298,7 +299,7 @@ def can_start_attack(user_id):
         return False, f"⚠️ **ᴍᴀxɪᴍᴜᴍ ᴀᴛᴛᴀᴄᴋ ʟɪᴍɪᴛ ʀᴇᴀᴄʜᴇᴅ**\n━━━━━━━━━━━━━━━━━━━━━━\nʏᴏᴜ ʜᴀᴠᴇ ᴜsᴇᴅ ᴀʟʟ {MAX_ATTACKS} ᴀᴛᴛᴀᴄᴋ(s). ᴄᴏɴᴛᴀᴄᴛ ᴀᴅᴍɪɴ ғᴏʀ ᴍᴏʀᴇ."
     
     if current_attack is not None:
-        return False, "⚠️ **ᴇʀʀᴏʀ: ᴀᴛᴛᴀᴄᴋ ᴀʟʀᴇᴀᴅʏ ʀᴜɴɴɪɴɢ**\n━━━━━━━━━━━━━━━━━━━━━━\nᴘʟᴇᴀsᴇ ᴡᴀɪᴛ ᴜɴᴛɪʟ ᴛʜᴇ ᴄᴜʀʀᴇɴᴛ ᴀᴛᴛᴀᴄᴋ ғɪɴɪsʜᴇs ᴏʀ 40 sᴇᴄᴏɴᴅs ᴄᴏᴏʟᴅᴏᴡɴ."
+        return False, f"⚠️ **ᴇʀʀᴏʀ: ᴀᴛᴛᴀᴄᴋ ᴀʟʀᴇᴀᴅʏ ʀᴜɴɴɪɴɢ**\n━━━━━━━━━━━━━━━━━━━━━━\nᴘʟᴇᴀsᴇ ᴡᴀɪᴛ ᴜɴᴛɪʟ ᴛʜᴇ ᴄᴜʀʀᴇɴᴛ ᴀᴛᴛᴀᴄᴋ ғɪɴɪsʜᴇs ᴏʀ {COOLDOWN_DURATION} sᴇᴄᴏɴᴅs ᴄᴏᴏʟᴅᴏᴡɴ."
     
     current_time = time.time()
     if current_time < cooldown_until:
@@ -738,7 +739,7 @@ async def myaccess_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 if time.time() > expiry_time:
                     expiry = "ᴇxᴘɪʀᴇᴅ"
                 else:
-                    expiry_date = time.strftime("%Y-%ᴍ-%ᴅ", time.localtime(expiry_time))
+                    expiry_date = time.strftime("%Y-%m-%d", time.localtime(expiry_time))
                     expiry = expiry_date
             except:
                 pass
@@ -752,7 +753,7 @@ async def myaccess_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 if time.time() > expiry_time:
                     expiry = "ᴇxᴘɪʀᴇᴅ"
                 else:
-                    expiry_date = time.strftime("%Y-%ᴍ-%ᴅ", time.localtime(expiry_time))
+                    expiry_date = time.strftime("%Y-%m-%d", time.localtime(expiry_time))
                     expiry = expiry_date
             except:
                 pass
@@ -1411,6 +1412,12 @@ async def add_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         new_user_id = int(context.args[0])
         days = int(context.args[1])
+
+        pending_username = None
+        for pending_user in pending_users:
+            if str(pending_user.get('user_id')) == str(new_user_id):
+                pending_username = pending_user.get('username')
+                break
         
         
         pending_users[:] = [u for u in pending_users if str(u['user_id']) != str(new_user_id)]
@@ -1424,7 +1431,7 @@ async def add_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         
         approved_users[str(new_user_id)] = {
-            "username": update.effective_user.username or f"user_{new_user_id}",
+            "username": pending_username or f"user_{new_user_id}",
             "added_by": user_id,
             "added_date": time.strftime("%Y-%m-%d %H:%M:%S"),
             "expiry": expiry,
@@ -1542,7 +1549,7 @@ async def resellerlist_command(update: Update, context: ContextTypes.DEFAULT_TYP
         if expiry != 'LIFETIME':
             try:
                 expiry_time = float(expiry)
-                expiry_date = time.strftime("%Y-%ᴍ-%ᴅ", time.localtime(expiry_time))
+                expiry_date = time.strftime("%Y-%m-%d", time.localtime(expiry_time))
                 expiry = expiry_date
             except:
                 pass
@@ -1664,7 +1671,7 @@ async def send_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE, mes
                 text=f"📢 **ʙʀᴏᴀᴅᴄᴀsᴛ**\n━━━━━━━━━━━━━━━━━━━━━━\n{message}"
             )
             success_count += 1
-            time.sleep(0.1)
+            await asyncio.sleep(0.1)
         except:
             fail_count += 1
     
@@ -2175,6 +2182,11 @@ async def cancel_upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 
+async def cancel_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("❌ **ʙʀᴏᴀᴅᴄᴀsᴛ ᴄᴀɴᴄᴇʟʟᴇᴅ**\n━━━━━━━━━━━━━━━━━━━━━━")
+    return ConversationHandler.END
+
+
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if update.message and update.message.text and update.message.text.startswith('/'):
@@ -2205,10 +2217,10 @@ def main():
         states={
             WAITING_FOR_BROADCAST: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, broadcast_message_handler),
-                CommandHandler('cancel', cancel_upload)
+                CommandHandler('cancel', cancel_broadcast)
             ],
         },
-        fallbacks=[CommandHandler('cancel', cancel_upload)]
+        fallbacks=[CommandHandler('cancel', cancel_broadcast)]
     )
     
     
